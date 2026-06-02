@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HEIST CITY</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Oxanium:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="game"></div>
+<div id="hud" class="hidden">
+  <div class="bar-wrap left">
+    <div class="bar-label">Thief · HP</div>
+    <div class="bar" id="thiefHp"><i></i></div>
+    <div class="bar" id="stam"><i></i></div>
+    <div id="hidden">◆ HIDDEN — recovering</div>
+  </div>
+  <div id="topmid"><div id="points">0<small>Points</small></div><div id="wanted"></div><div id="combo"></div></div>
+  <div id="map"><canvas id="mini" width="360" height="360"></canvas></div>
+  <div id="mapcap">GPS · reroutes as you move</div>
+  <div id="crosshair"></div>
+  <div id="hitmarker"></div>
+  <div id="popups"></div>
+  <div id="ammo"></div>
+  <div id="fightUI" class="hidden">
+    <div id="copName">⚔ Fight</div>
+    <div class="bar" id="copHp"><i></i></div>
+    <div id="fightHint"><b>J/●</b> Punch &nbsp; <b>K/●</b> Kick &nbsp; hold <b>L/●</b> Block</div>
+  </div>
+  <div id="prompt"></div>
+  <div id="heistBar"><i></i></div>
+  <div id="objective">Rob the target, then escape</div>
+</div>
+<div id="botTag">▶ AUTO DEMO — press P to take over</div>
+<div id="banner"></div>
+<div id="flash"></div>
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tbtn" id="btnAct">CAR</div>
+  <div class="tbtn" id="btnHide">HIDE</div>
+  <div class="tbtn" id="btnGun">GUN</div>
+  <div class="tbtn" id="btnJump">JUMP</div>
+  <div class="tbtn" id="btnHit">FIRE</div>
+</div>
+<div class="screen" id="startScreen">
+  <div class="kicker">Open-City Heist · Gunplay Build</div>
+  <h1>HEIST <em>CITY</em></h1>
+  <p class="sub">Pull off the heist: find the <b>gold-marked target</b> and hold position to crack it,
+     then fight your way out and <b>escape to the safe house</b> alive. Cops shoot back from range —
+     use buildings as cover. Heal at hideouts, restock at gold ammo crates.</p>
+  <div class="controls">
+    <div class="k">W A S D</div><div class="v">Move</div>
+    <div class="k">SHIFT</div><div class="v">Sprint</div>
+    <div class="k">F / CLICK</div><div class="v">Fire (hold)</div>
+    <div class="k">R</div><div class="v">Reload</div>
+    <div class="k">SPACE</div><div class="v">Jump</div>
+    <div class="k">E</div><div class="v">Enter / exit car</div>
+    <div class="k">J · K · L</div><div class="v">Fist-fight: Punch · Kick · Block</div>
+    <div class="k">P</div><div class="v">Toggle auto-demo bot</div>
+  </div>
+  <div class="btnrow">
+    <button id="startBtn">Hit the Streets</button>
+    <button id="demoBtn" class="ghost">Watch Pro Demo</button>
+    <button id="shopBtn" class="ghost">Upgrades</button>
+    <button id="sceneBtn" class="ghost">TIME: NIGHT</button>
+  </div>
+</div>
+<div class="screen hidden" id="endScreen">
+  <div class="kicker" id="endKicker"></div>
+  <div class="endbig" id="endTitle"></div>
+  <div class="stat">Score <b id="endScore">0</b></div>
+  <div class="stat" style="margin-bottom:26px">Time on the run <b id="endTime">0s</b></div>
+  <div class="btnrow"><button id="restartBtn">Run Again</button><button id="shopBtn2" class="ghost">Upgrades</button></div>
+</div>
+
+<div class="screen hidden" id="shopScreen">
+  <div class="kicker">Credits <b id="shopCredits">0</b></div>
+  <h1>UP<em>GRADE</em></h1>
+  <div id="shopList"></div>
+  <button id="shopBack">Back</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

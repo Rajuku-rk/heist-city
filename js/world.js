@@ -1,0 +1,124 @@
+// Builds the city geometry and spawns all actors (thief, car, cops, boss).
+import { CFG, HALF, nodeX, nodeZ } from './config.js';
+import { S } from './state.js';
+import { scene, world } from './engine.js';
+import { makeChar, makeCar, makeTree } from './factory.js';
+import { recomputeGPS } from './nav.js';
+import { banner } from './ui.js';
+import { Audio } from './audio.js';
+import { placeHeist } from './heist.js';
+import { makeAnimatedChar } from './models.js';
+
+export function collide(ent,r){
+  for(const b of S.buildings){ const nx=Math.max(b.cx-b.hw,Math.min(ent.x,b.cx+b.hw)), nz=Math.max(b.cz-b.hd,Math.min(ent.z,b.cz+b.hd));
+    const dx=ent.x-nx,dz=ent.z-nz,d2=dx*dx+dz*dz; if(d2<r*r){ if(d2>1e-6){ const d=Math.sqrt(d2); ent.x+=dx/d*(r-d); ent.z+=dz/d*(r-d);} else ent.x=b.cx+b.hw+r; } }
+  const lim=HALF+CFG.unit/2-r; ent.x=Math.max(-lim,Math.min(lim,ent.x)); ent.z=Math.max(-lim,Math.min(lim,ent.z));
+  if(ent.z<-HALF-2) ent.z=-HALF-2;
+}
+
+function pickupMesh(type){ const grp=new THREE.Group();
+  if(type==='ammo'){ const box=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.6,0.7),new THREE.MeshStandardMaterial({color:0x2c2c2c,emissive:0x4a3a00,emissiveIntensity:.5})); box.castShadow=true; grp.add(box);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.18,0.3),new THREE.MeshBasicMaterial({color:0xffd060})); b.position.y=0.18; grp.add(b);
+  } else { const box=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.7,0.9),new THREE.MeshStandardMaterial({color:0xe8e8e8,emissive:0x224422,emissiveIntensity:.4})); box.castShadow=true; grp.add(box);
+    const c1=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.18,0.2),new THREE.MeshBasicMaterial({color:0x37c837})); c1.position.y=0.05; grp.add(c1);
+    const c2=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.55,0.2),new THREE.MeshBasicMaterial({color:0x37c837})); c2.position.y=0.05; grp.add(c2); }
+  return grp; }
+
+export function buildCity(){
+  S.buildings.length=0; S.parks.length=0; S.hideouts.length=0; S.pickups.length=0; S.safe=null; S.diamond=null;
+  while(world.children.length) world.remove(world.children[0]);
+  const span=CFG.GN*CFG.unit;
+  const ground=new THREE.Mesh(new THREE.BoxGeometry(span+60,1,span+60),new THREE.MeshStandardMaterial({color:0x12151c,roughness:.98})); ground.position.y=-0.5; ground.receiveShadow=true; world.add(ground);
+  const river=new THREE.Mesh(new THREE.PlaneGeometry(span+120,70),new THREE.MeshStandardMaterial({color:0x123a52,roughness:.2,metalness:.6,emissive:0x06202e,emissiveIntensity:.5})); river.rotation.x=-Math.PI/2; river.position.set(0,-0.2,-HALF-46); world.add(river);
+  const embank=new THREE.Mesh(new THREE.BoxGeometry(span+60,2,3),new THREE.MeshStandardMaterial({color:0x20252e})); embank.position.set(0,0.6,-HALF-9); world.add(embank);
+  const lineMat=new THREE.MeshBasicMaterial({color:0x3a4150});
+  for(let i=0;i<=CFG.GN;i++){ const v=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.02,span),lineMat); v.position.set(nodeX(i),0.03,0); world.add(v);
+    const h=new THREE.Mesh(new THREE.BoxGeometry(span,0.02,0.35),lineMat); h.position.set(0,0.03,nodeZ(i)); world.add(h); }
+  const safeBlock=[CFG.GN-1,CFG.GN-1], parkBlocks=[[1,3],[4,1]], hideBlocks=[[0,4],[5,5],[2,1]];
+  const isSafe=(i,j)=>i===safeBlock[0]&&j===safeBlock[1];
+  const isPark=(i,j)=>parkBlocks.some(b=>b[0]===i&&b[1]===j);
+  const isHide=(i,j)=>hideBlocks.some(b=>b[0]===i&&b[1]===j);
+  const inner=CFG.unit-CFG.road;
+  const buildMats=[0x2b333f,0x3a2f28,0x28323f,0x342b3a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:.1,emissive:0x0a0c10,emissiveIntensity:.4}));
+  const swMat=new THREE.MeshStandardMaterial({color:0x20252e,roughness:.95}), grassMat=new THREE.MeshStandardMaterial({color:0x1c3a22,roughness:.95});
+  const winMat=new THREE.MeshBasicMaterial({color:0xffd27a}), winMat2=new THREE.MeshBasicMaterial({color:0x7ad0ff});
+  for(let i=0;i<CFG.GN;i++) for(let j=0;j<CFG.GN;j++){
+    const cx=nodeX(i)+CFG.unit/2, cz=nodeZ(j)+CFG.unit/2;
+    if(isPark(i,j)){ const gr=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.25,inner+3),grassMat); gr.position.set(cx,0.12,cz); gr.receiveShadow=true; world.add(gr);
+      for(let k=0;k<5;k++) makeTree(cx+(Math.random()-.5)*inner*0.7, cz+(Math.random()-.5)*inner*0.7, 0.9+Math.random()*0.4); S.parks.push({cx,cz}); continue; }
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.3,inner+3),swMat); sw.position.set(cx,0.15,cz); sw.receiveShadow=true; world.add(sw);
+    if(isSafe(i,j)){
+      const pad=new THREE.Mesh(new THREE.CylinderGeometry(6,6,0.18,40),new THREE.MeshStandardMaterial({color:0x28e0c8,emissive:0x28e0c8,emissiveIntensity:1.0,transparent:true,opacity:.5})); pad.position.set(cx,0.32,cz); world.add(pad);
+      const beam=new THREE.Mesh(new THREE.CylinderGeometry(3.4,6,22,28,1,true),new THREE.MeshBasicMaterial({color:0x28e0c8,transparent:true,opacity:.1,side:THREE.DoubleSide})); beam.position.set(cx,11,cz); world.add(beam);
+      const pl=new THREE.PointLight(0x28e0c8,2.4,40); pl.position.set(cx,7,cz); world.add(pl); S.safe={x:cx,z:cz,r:6};
+      const dia=new THREE.Mesh(new THREE.OctahedronGeometry(1.1),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x9ff0ff,emissiveIntensity:1.4,metalness:.7,roughness:.1})); dia.position.set(cx,2.2,cz); world.add(dia); S.diamond={x:cx,z:cz,mesh:dia};
+    } else if(isHide(i,j)){
+      const post=new THREE.MeshStandardMaterial({color:0x223326}); [[-3,-3],[3,-3],[-3,3],[3,3]].forEach(([ox,oz])=>{ const p=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.18,3.4,8),post); p.position.set(cx+ox,1.7,cz+oz); world.add(p); });
+      const roof=new THREE.Mesh(new THREE.BoxGeometry(7.5,0.4,7.5),new THREE.MeshStandardMaterial({color:0x2e5a34,emissive:0x103a18,emissiveIntensity:.6})); roof.position.set(cx,3.5,cz); roof.castShadow=true; world.add(roof);
+      const zone=new THREE.Mesh(new THREE.CylinderGeometry(5,5,0.1,28),new THREE.MeshBasicMaterial({color:0x5dd95d,transparent:true,opacity:.14})); zone.position.set(cx,0.2,cz); world.add(zone);
+      makeTree(cx-4,cz-4,0.8); makeTree(cx+4,cz+4,0.8); S.hideouts.push({x:cx,z:cz,r:5});
+    } else {
+      const h=10+Math.random()*30, w=inner*(0.78+Math.random()*0.16);
+      const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),buildMats[(i*3+j)%buildMats.length]); m.position.set(cx,h/2+0.3,cz); m.castShadow=true; m.receiveShadow=true; world.add(m);
+      const cols=1+Math.floor(Math.random()*2);
+      for(let cI=0;cI<cols;cI++){ const wm=Math.random()<0.7?winMat:winMat2; const strip=new THREE.Mesh(new THREE.BoxGeometry(0.9,h*0.7,0.05),wm); strip.position.set(cx-w/2+w*(cI+1)/(cols+1),h*0.55,cz+w/2+0.03); world.add(strip); }
+      S.buildings.push({cx,cz,hw:w/2,hd:w/2});
+    }
+  }
+  const poleMat=new THREE.MeshStandardMaterial({color:0x15181f}), bulbMat=new THREE.MeshBasicMaterial({color:0xffd9a0});
+  for(let i=0;i<=CFG.GN;i++) for(let j=0;j<=CFG.GN;j++){ if((i+j)%2!==0) continue;
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.16,5,8),poleMat); pole.position.set(nodeX(i)+2,2.5,nodeZ(j)+2); world.add(pole);
+    const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.34,10,10),bulbMat); bulb.position.set(nodeX(i)+2,5,nodeZ(j)+2); world.add(bulb); }
+  // pickups: green = health, gold = ammo
+  const hpSpots=[[1,1],[5,2],[2,5],[6,4]], ammoSpots=[[3,6],[6,1],[0,2],[4,5]];
+  for(const [i,j] of hpSpots){ const x=nodeX(i),z=nodeZ(j); const g=pickupMesh('hp'); g.position.set(x,1.0,z); world.add(g); S.pickups.push({x,z,active:true,t:0,type:'hp',mesh:g}); }
+  for(const [i,j] of ammoSpots){ const x=nodeX(i),z=nodeZ(j); const g=pickupMesh('ammo'); g.position.set(x,1.0,z); world.add(g); S.pickups.push({x,z,active:true,t:0,type:'ammo',mesh:g}); }
+  placeHeist();
+}
+
+export function spawnAll(){
+  if(S.player) scene.remove(S.player.mesh); S.player=null;
+  S.police.forEach(p=>scene.remove(p.mesh)); S.police=[];
+  if(S.car) scene.remove(S.car.mesh); S.car=null;
+  S.fight.active=false; S.fight.target=null; S.fight.cd=0; S.hidden=false; S.combo=0; S.bossDefeated=false;
+  S.gun=CFG.guns[S.gunIndex]; S.ammo=S.gun.mag; S.reloading=false; S.reloadT=0; S.fireCd=0; S.firing=false; S.shootReq=false;
+
+  const _pc=makeAnimatedChar(0x1b3a4a);
+  S.player={mesh:_pc.mesh,mixer:_pc.mixer,actions:_pc.actions,animCur:'',x:nodeX(Math.floor(CFG.GN/2)),z:nodeZ(Math.floor(CFG.GN/2)),y:0,vy:0,vx:0,vz:0,facing:0,hp:CFG.player.maxHp,stam:CFG.player.maxStam,grounded:true,runPhase:0,fAtk:0,fType:null};
+  S.car=null;
+
+  function cop(o){ const pc=makeAnimatedChar(o.accent,false); if(o.scale) pc.mesh.scale.setScalar(o.scale);
+    S.police.push({mesh:pc.mesh,mixer:pc.mixer,actions:pc.actions,animCur:'',x:o.x,z:o.z,y:0,vx:0,vz:0,facing:0,hp:o.hp,maxHp:o.hp,state:'patrol',role:o.role,anchor:{x:o.x,z:o.z},path:[],repath:0,runPhase:0,windup:0,fTimer:1,downT:0,lostT:0,gunCd:0}); }
+
+  cop({role:'boss',body:0x101014,accent:0xffd24a,scale:CFG.boss.scale,hp:CFG.boss.hp,x:S.safe.x-11,z:S.safe.z-11});
+  cop({role:'guard',female:false,body:0x2a1530,accent:0xff3b4e,hp:100,x:S.safe.x-13,z:S.safe.z-4});
+  cop({role:'guard',female:true ,body:0x301a36,accent:0xff6fa0,hp:100,x:S.safe.x-4,z:S.safe.z-13});
+  const cps=[[3,3],[CFG.GN,2],[1,CFG.GN],[CFG.GN-2,CFG.GN-3],[2,2]];
+  cps.forEach(([ci,cj],k)=>cop({role:'checkpoint',female:(k%2===0),body:(k%2===0)?0x301a36:0x2a1530,accent:(k%2===0)?0xff6fa0:0xff3b4e,hp:100,x:nodeX(ci),z:nodeZ(cj)}));
+  if(S.heist.zone){ const hz=S.heist.zone, R=hz.r+1.5; for(let k=0;k<3;k++){ const a=k*2.094; cop({role:'guard',body:0x1c2330,accent:0x3ad0ff,female:(k%2===0),hp:110,x:hz.x+Math.cos(a)*R,z:hz.z+Math.sin(a)*R}); } }
+
+  const _boss=S.police.find(c=>c.role==='boss'); if(_boss){ _boss.appeared=true; _boss.mesh.visible=true; }
+  S.driving=false; S.camYaw=0; S.lastStartKey=-1; recomputeGPS(true);
+}
+
+// ---- Alarm + escalating police waves (phase 2) ----
+export function addCop(o){ const pc=makeAnimatedChar(o.accent,false); if(o.scale) pc.mesh.scale.setScalar(o.scale);
+  const c={mesh:pc.mesh,mixer:pc.mixer,actions:pc.actions,animCur:'',x:o.x,z:o.z,y:0,vx:0,vz:0,facing:0,hp:o.hp,maxHp:o.hp,state:o.state||'patrol',role:o.role,anchor:{x:o.x,z:o.z},path:[],repath:0,runPhase:0,windup:0,fTimer:1,downT:0,lostT:0,gunCd:0};
+  S.police.push(c); return c; }
+
+function spawnWave(){
+  const active=S.police.reduce((n,c)=>n+(c.state!=='down'?1:0),0);
+  if(active>=CFG.alarm.maxActive) return;
+  const p=S.player, room=CFG.alarm.maxActive-active, lim=HALF+CFG.unit/2-2;
+  const n=Math.min(CFG.alarm.perWave+Math.floor(S.waveCount/2), room);
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, R=CFG.alarm.spawnDist;
+    const x=Math.max(-lim,Math.min(lim,p.x+Math.cos(a)*R)), z=Math.max(-lim,Math.min(lim,p.z+Math.sin(a)*R));
+    addCop({role:'checkpoint',female:(i%2===0),body:(i%2===0)?0x301a36:0x2a1530,accent:(i%2===0)?0xff6fa0:0xff3b4e,hp:100,x,z,state:'chase'}); }
+  banner('POLICE BACKUP INBOUND','#ff5a4e'); if(Audio.alert) Audio.alert();
+}
+
+export function updateAlarm(dt){
+  if(!S.alarm) return;
+  S.waveTimer-=dt;
+  if(S.waveTimer<=0){ spawnWave(); S.waveCount++; S.heat=Math.min(CFG.alarm.maxHeat,1+Math.floor(S.waveCount/CFG.alarm.heatEvery)); S.waveTimer=CFG.alarm.interval; }
+}
