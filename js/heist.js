@@ -5,15 +5,18 @@ import { world } from './engine.js';
 import { banner } from './ui.js';
 import { Audio } from './audio.js';
 
-let beacon=null, loot=null, light=null;
+let beacon=null, loot=null, light=null, lastB=-1;
 
 export function placeHeist(){
+  if(beacon){ world.remove(beacon); beacon=null; } if(light){ world.remove(light); light=null; } if(loot){ world.remove(loot); loot=null; }
   S.heist.looted=false; S.heist.cracking=false; S.heist.progress=0; S.heist.zone=null;
   S.alarm=false; S.heat=0; S.waveTimer=0; S.waveCount=0;
   if(!S.buildings.length) return;
   let maxD=0; for(const bb of S.buildings){ const d=S.safe?Math.hypot(bb.cx-S.safe.x,bb.cz-S.safe.z):0; if(d>maxD)maxD=d; }
   const far=S.buildings.filter(bb=>!S.safe||Math.hypot(bb.cx-S.safe.x,bb.cz-S.safe.z)>maxD*0.7);
-  const b=far[Math.floor(Math.random()*far.length)]||S.buildings[0];
+  let bi=Math.floor(Math.random()*far.length);
+  if(far.length>1 && bi===lastB) bi=(bi+1)%far.length;
+  lastB=bi; const b=far[bi]||S.buildings[0];
   S.heist.name=CFG.heist.names[Math.floor(Math.random()*CFG.heist.names.length)];
   S.heist.zone={ x:b.cx, z:b.cz, r:b.hw+3 };
   const gold=0xffcf3a;
