@@ -141,18 +141,34 @@ export function spawnAll(){
 
 // ---- Alarm + escalating police waves (phase 2) ----
 export function addCop(o){ const pc=makeAnimatedChar(o.accent,false); if(o.scale) pc.mesh.scale.setScalar(o.scale);
-  const c={mesh:pc.mesh,mixer:pc.mixer,actions:pc.actions,animCur:'',x:o.x,z:o.z,y:0,vx:0,vz:0,facing:0,hp:o.hp,maxHp:o.hp,state:o.state||'patrol',role:o.role,anchor:{x:o.x,z:o.z},path:[],repath:0,runPhase:0,windup:0,fTimer:1,downT:0,lostT:0,gunCd:0};
+  const c={mesh:pc.mesh,mixer:pc.mixer,actions:pc.actions,animCur:'',x:o.x,z:o.z,y:0,vx:0,vz:0,facing:0,hp:o.hp,maxHp:o.hp,state:o.state||'patrol',role:o.role,kind:o.kind||'cop',gunDmg:o.gunDmg,gunRange:o.gunRange,gunCdBase:o.gunCdBase,anchor:{x:o.x,z:o.z},path:[],repath:0,runPhase:0,windup:0,fTimer:1,downT:0,lostT:0,gunCd:0};
   S.police.push(c); return c; }
+
+function copSpec(x,z,state){
+  const r=Math.random();
+  if(S.round>=CFG.copTypes.sniper.fromRound && r<0.18){ const t=CFG.copTypes.sniper;
+    return {role:'checkpoint',kind:'sniper',accent:t.tint,hp:t.hp,gunDmg:t.gunDmg,gunRange:t.gunRange,gunCdBase:t.gunCdBase,x,z,state}; }
+  if(S.round>=CFG.copTypes.heavy.fromRound && r<0.42){ const t=CFG.copTypes.heavy;
+    return {role:'checkpoint',kind:'heavy',accent:t.tint,hp:t.hp,gunDmg:t.gunDmg,gunRange:t.gunRange,gunCdBase:t.gunCdBase,x,z,state}; }
+  return {role:'checkpoint',kind:'cop',accent:(Math.random()<0.5)?0xff6fa0:0xff3b4e,hp:100,x,z,state};
+}
 
 function spawnWave(){
   const active=S.police.reduce((n,c)=>n+(c.state!=='down'?1:0),0);
   if(active>=CFG.alarm.maxActive) return;
   const p=S.player, room=CFG.alarm.maxActive-active, lim=HALF+CFG.unit/2-2;
-  const n=Math.min(CFG.alarm.perWave+Math.floor(S.waveCount/2), room);
+  const n=Math.min(CFG.alarm.perWave+Math.floor(S.waveCount/2)+Math.floor((S.round-1)*0.7), room);
   for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, R=CFG.alarm.spawnDist;
     const x=Math.max(-lim,Math.min(lim,p.x+Math.cos(a)*R)), z=Math.max(-lim,Math.min(lim,p.z+Math.sin(a)*R));
-    addCop({role:'checkpoint',female:(i%2===0),body:(i%2===0)?0x301a36:0x2a1530,accent:(i%2===0)?0xff6fa0:0xff3b4e,hp:100,x,z,state:'chase'}); }
+    addCop(copSpec(x,z,'chase')); }
   banner('POLICE BACKUP INBOUND','#ff5a4e'); if(Audio.alert) Audio.alert();
+}
+
+export function spawnRoundGuards(){
+  const z=S.heist.zone; if(!z) return;
+  const g=Math.min(8, 3+Math.floor((S.round-1)*0.8));
+  for(let i=0;i<g;i++){ const a=(i/g)*Math.PI*2, R=z.r+5;
+    addCop(copSpec(z.x+Math.cos(a)*R, z.z+Math.sin(a)*R, 'patrol')); }
 }
 
 export function updateAlarm(dt){
