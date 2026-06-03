@@ -4,7 +4,7 @@ import { S } from './state.js';
 import { scene } from './engine.js';
 import { Audio } from './audio.js';
 import { flash, banner, hitMark, popup } from './ui.js';
-import { playAction } from './models.js';
+import { playAction, setGunModel } from './models.js';
 
 let muzzle=null;
 export function initWeapons(){
@@ -23,7 +23,7 @@ export function segmentBlocked(ax,az,bx,bz){ const dx=bx-ax,dz=bz-az,len=Math.hy
   for(let s=1;s<steps;s++){ const u=s/steps,x=ax+dx*u,z=az+dz*u;
     for(const b of S.buildings){ if(x>b.cx-b.hw-0.3&&x<b.cx+b.hw+0.3&&z>b.cz-b.hd-0.3&&z<b.cz+b.hd+0.3) return true; } } return false; }
 
-export function setGun(i){ if(i<0||i>=CFG.guns.length) return; S.gunIndex=i; S.gun=CFG.guns[i]; S.ammo=S.gun.mag; S.reloading=false; S.fireCd=0; banner(S.gun.name+' equipped','#ffb22e'); }
+export function setGun(i){ if(i<0||i>=CFG.guns.length) return; S.gunIndex=i; S.gun=CFG.guns[i]; S.ammo=S.gun.mag; S.reloading=false; S.fireCd=0; if(S.player&&S.player.hand) setGunModel(S.player,S.gun.name.toLowerCase()); banner(S.gun.name+' equipped','#ffb22e'); }
 export function reload(){ if(S.reloading||S.ammo>=S.gun.mag) return; S.reloading=true; S.reloadT=S.gun.reload; Audio.reload(); }
 
 function playerFire(){ const p=S.player, g=S.gun; if(S.ammo<=0){ reload(); return; } S.ammo--; S.fireCd=g.fireCd; Audio.shot(); playAction(p,'shoot',0.18);
