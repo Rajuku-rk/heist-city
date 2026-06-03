@@ -15,6 +15,10 @@ export const Audio = (function(){
   function fightTick(){ const riff=[98,98,116.5,130.8,98,116.5,87.3,98]; const f=riff[step%riff.length];
     blip(f,.16,'sawtooth',.5,music); blip(f*2,.1,'square',.2,music); if(step%2===0) kick(); if(step%4===2) blip(1200,.04,'square',.12,music); step++; }
   function schedule(){ clearInterval(timer); if(mode==='run') timer=setInterval(runTick,230); else if(mode==='fight') timer=setInterval(fightTick,150); }
+  // Unlock audio on the first user gesture (browsers keep it suspended until then)
+  function unlock(){ init(); if(ctx.state==='suspended') ctx.resume();
+    window.removeEventListener('pointerdown',unlock); window.removeEventListener('keydown',unlock); window.removeEventListener('touchstart',unlock); }
+  window.addEventListener('pointerdown',unlock); window.addEventListener('keydown',unlock); window.addEventListener('touchstart',unlock);
   return {
     ensure(){ init(); if(ctx.state==='suspended') ctx.resume(); },
     play(m){ this.ensure(); if(mode===m) return; mode=m; step=0; schedule(); },
