@@ -9,7 +9,7 @@ import { animChar } from './police.js';
 import { enterFight } from './fight.js';
 import { driveLocomotion } from './models.js';
 
-export function checkWin(ent){ if(S.heist.looted && S.safe && dist(ent,S.safe)<S.safe.r){ S.points+=CFG.pointsWin; import('./game.js').then(m=>m.endGame(true)); } }
+export function checkWin(ent){ if(S.heist.looted && !S.roundChanging && S.safe && dist(ent,S.safe)<S.safe.r){ S.roundChanging=true; import('./game.js').then(m=>m.nextRound()); } }
 
 export function updatePlayer(dt){ const p=S.player,c=CFG.player; const {wx,wz,mag}=inputWorldDir(); const moving=mag>0.05;
   const wantSprint=(S.bot?S.botSprint:(S.keys['ShiftLeft']||S.keys['ShiftRight']))&&moving&&p.stam>1; const speed=wantSprint?c.sprint:c.walk;
