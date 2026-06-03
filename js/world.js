@@ -24,28 +24,60 @@ function pickupMesh(type){ const grp=new THREE.Group();
     const c2=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.55,0.2),new THREE.MeshBasicMaterial({color:0x37c837})); c2.position.y=0.05; grp.add(c2); }
   return grp; }
 
+// --- procedural textures for the city look ---
+function makeFacadeTex(wallHex){
+  const c=document.createElement('canvas'); c.width=32; c.height=64; const x=c.getContext('2d');
+  x.fillStyle=wallHex; x.fillRect(0,0,32,64);
+  for(let fy=0; fy<8; fy++) for(let wx=0; wx<3; wx++){
+    const r=Math.random(); x.fillStyle = r<0.40 ? '#ffd98a' : (r<0.62 ? '#9fe0ff' : '#0b0e14');
+    x.fillRect(4+wx*9, 4+fy*7.6, 6, 5);
+  }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.magFilter=THREE.NearestFilter; return t;
+}
+function makeDashTex(){
+  const c=document.createElement('canvas'); c.width=8; c.height=32; const x=c.getContext('2d');
+  x.clearRect(0,0,8,32); x.fillStyle='#cfc9ad'; x.fillRect(3,6,2,16);
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.magFilter=THREE.NearestFilter; return t;
+}
+
 export function buildCity(){
   S.buildings.length=0; S.parks.length=0; S.hideouts.length=0; S.pickups.length=0; S.safe=null; S.diamond=null;
   while(world.children.length) world.remove(world.children[0]);
   const span=CFG.GN*CFG.unit;
-  const ground=new THREE.Mesh(new THREE.BoxGeometry(span+60,1,span+60),new THREE.MeshStandardMaterial({color:0x12151c,roughness:.98})); ground.position.y=-0.5; ground.receiveShadow=true; world.add(ground);
+
+  const ground=new THREE.Mesh(new THREE.BoxGeometry(span+60,1,span+60),new THREE.MeshStandardMaterial({color:0x1a1d24,roughness:1})); ground.position.y=-0.5; ground.receiveShadow=true; world.add(ground);
   const river=new THREE.Mesh(new THREE.PlaneGeometry(span+120,70),new THREE.MeshStandardMaterial({color:0x123a52,roughness:.2,metalness:.6,emissive:0x06202e,emissiveIntensity:.5})); river.rotation.x=-Math.PI/2; river.position.set(0,-0.2,-HALF-46); world.add(river);
   const embank=new THREE.Mesh(new THREE.BoxGeometry(span+60,2,3),new THREE.MeshStandardMaterial({color:0x20252e})); embank.position.set(0,0.6,-HALF-9); world.add(embank);
-  const lineMat=new THREE.MeshBasicMaterial({color:0x3a4150});
-  for(let i=0;i<=CFG.GN;i++){ const v=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.02,span),lineMat); v.position.set(nodeX(i),0.03,0); world.add(v);
-    const h=new THREE.Mesh(new THREE.BoxGeometry(span,0.02,0.35),lineMat); h.position.set(0,0.03,nodeZ(i)); world.add(h); }
+
+  const dash=makeDashTex();
+  for(let i=0;i<=CFG.GN;i++){
+    const tv=dash.clone(); tv.needsUpdate=true; tv.repeat.set(1,Math.round(span/4));
+    const v=new THREE.Mesh(new THREE.PlaneGeometry(0.5,span),new THREE.MeshBasicMaterial({map:tv,transparent:true,depthWrite:false})); v.rotation.x=-Math.PI/2; v.position.set(nodeX(i),0.05,0); world.add(v);
+    const tz=dash.clone(); tz.needsUpdate=true; tz.repeat.set(1,Math.round(span/4));
+    const hh=new THREE.Mesh(new THREE.PlaneGeometry(0.5,span),new THREE.MeshBasicMaterial({map:tz,transparent:true,depthWrite:false})); hh.rotation.x=-Math.PI/2; hh.rotation.z=Math.PI/2; hh.position.set(0,0.05,nodeZ(i)); world.add(hh);
+  }
+
   const safeBlock=[CFG.GN-1,CFG.GN-1], parkBlocks=[[1,3],[4,1]], hideBlocks=[[0,4],[5,5],[2,1]];
   const isSafe=(i,j)=>i===safeBlock[0]&&j===safeBlock[1];
   const isPark=(i,j)=>parkBlocks.some(b=>b[0]===i&&b[1]===j);
   const isHide=(i,j)=>hideBlocks.some(b=>b[0]===i&&b[1]===j);
   const inner=CFG.unit-CFG.road;
-  const buildMats=[0x2b333f,0x3a2f28,0x28323f,0x342b3a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:.1,emissive:0x0a0c10,emissiveIntensity:.4}));
-  const swMat=new THREE.MeshStandardMaterial({color:0x20252e,roughness:.95}), grassMat=new THREE.MeshStandardMaterial({color:0x1c3a22,roughness:.95});
-  const winMat=new THREE.MeshBasicMaterial({color:0xffd27a}), winMat2=new THREE.MeshBasicMaterial({color:0x7ad0ff});
+  const palette=['#2b333f','#3a2f28','#28323f','#342b3a','#33303a','#2f3a3a'];
+  const swMat=new THREE.MeshStandardMaterial({color:0x3a3f48,roughness:.95});
+  const grassMat=new THREE.MeshStandardMaterial({color:0x244a2a,roughness:.95});
+  const pathMat=new THREE.MeshStandardMaterial({color:0x6a6258,roughness:1});
+  const capMat=new THREE.MeshStandardMaterial({color:0x14171d,roughness:1});
+  const acMat=new THREE.MeshStandardMaterial({color:0x3a3f48,roughness:1});
+
   for(let i=0;i<CFG.GN;i++) for(let j=0;j<CFG.GN;j++){
     const cx=nodeX(i)+CFG.unit/2, cz=nodeZ(j)+CFG.unit/2;
-    if(isPark(i,j)){ const gr=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.25,inner+3),grassMat); gr.position.set(cx,0.12,cz); gr.receiveShadow=true; world.add(gr);
-      for(let k=0;k<5;k++) makeTree(cx+(Math.random()-.5)*inner*0.7, cz+(Math.random()-.5)*inner*0.7, 0.9+Math.random()*0.4); S.parks.push({cx,cz}); continue; }
+    if(isPark(i,j)){
+      const gr=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.25,inner+3),grassMat); gr.position.set(cx,0.12,cz); gr.receiveShadow=true; world.add(gr);
+      const px=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.06,2),pathMat); px.position.set(cx,0.26,cz); world.add(px);
+      const pz=new THREE.Mesh(new THREE.BoxGeometry(2,0.06,inner+3),pathMat); pz.position.set(cx,0.26,cz); world.add(pz);
+      for(let k=0;k<5;k++) makeTree(cx+(Math.random()-.5)*inner*0.7, cz+(Math.random()-.5)*inner*0.7, 0.9+Math.random()*0.4);
+      S.parks.push({cx,cz}); continue;
+    }
     const sw=new THREE.Mesh(new THREE.BoxGeometry(inner+3,0.3,inner+3),swMat); sw.position.set(cx,0.15,cz); sw.receiveShadow=true; world.add(sw);
     if(isSafe(i,j)){
       const pad=new THREE.Mesh(new THREE.CylinderGeometry(6,6,0.18,40),new THREE.MeshStandardMaterial({color:0x28e0c8,emissive:0x28e0c8,emissiveIntensity:1.0,transparent:true,opacity:.5})); pad.position.set(cx,0.32,cz); world.add(pad);
@@ -58,18 +90,23 @@ export function buildCity(){
       const zone=new THREE.Mesh(new THREE.CylinderGeometry(5,5,0.1,28),new THREE.MeshBasicMaterial({color:0x5dd95d,transparent:true,opacity:.14})); zone.position.set(cx,0.2,cz); world.add(zone);
       makeTree(cx-4,cz-4,0.8); makeTree(cx+4,cz+4,0.8); S.hideouts.push({x:cx,z:cz,r:5});
     } else {
-      const h=10+Math.random()*30, w=inner*(0.78+Math.random()*0.16);
-      const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),buildMats[(i*3+j)%buildMats.length]); m.position.set(cx,h/2+0.3,cz); m.castShadow=true; m.receiveShadow=true; world.add(m);
-      const cols=1+Math.floor(Math.random()*2);
-      for(let cI=0;cI<cols;cI++){ const wm=Math.random()<0.7?winMat:winMat2; const strip=new THREE.Mesh(new THREE.BoxGeometry(0.9,h*0.7,0.05),wm); strip.position.set(cx-w/2+w*(cI+1)/(cols+1),h*0.55,cz+w/2+0.03); world.add(strip); }
+      const h=12+Math.random()*28, w=inner*(0.78+Math.random()*0.16);
+      const tex=makeFacadeTex(palette[(i*3+j)%palette.length]);
+      tex.repeat.set(Math.max(1,Math.round(w/7)), Math.max(2,Math.round(h/6)));
+      const mat=new THREE.MeshStandardMaterial({ map:tex, emissiveMap:tex, emissive:0xffffff, emissiveIntensity:0.5, roughness:.9, metalness:.05 });
+      const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),mat); m.position.set(cx,h/2+0.3,cz); m.castShadow=true; m.receiveShadow=true; world.add(m);
+      const cap=new THREE.Mesh(new THREE.BoxGeometry(w+0.5,0.7,w+0.5),capMat); cap.position.set(cx,h+0.65,cz); cap.castShadow=true; world.add(cap);
+      const ac=new THREE.Mesh(new THREE.BoxGeometry(2,1.1,2),acMat); ac.position.set(cx+(Math.random()-.5)*w*0.4, h+1.05, cz+(Math.random()-.5)*w*0.4); ac.castShadow=true; world.add(ac);
       S.buildings.push({cx,cz,hw:w/2,hd:w/2});
     }
   }
+
   const poleMat=new THREE.MeshStandardMaterial({color:0x15181f}), bulbMat=new THREE.MeshBasicMaterial({color:0xffd9a0});
   for(let i=0;i<=CFG.GN;i++) for(let j=0;j<=CFG.GN;j++){ if((i+j)%2!==0) continue;
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.16,5,8),poleMat); pole.position.set(nodeX(i)+2,2.5,nodeZ(j)+2); world.add(pole);
-    const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.34,10,10),bulbMat); bulb.position.set(nodeX(i)+2,5,nodeZ(j)+2); world.add(bulb); }
-  // pickups: green = health, gold = ammo
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.16,5,8),poleMat); pole.position.set(nodeX(i)+2,2.5,nodeZ(j)+2); pole.castShadow=true; world.add(pole);
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.15,0.15),poleMat); arm.position.set(nodeX(i)+2.8,4.9,nodeZ(j)+2); world.add(arm);
+    const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.34,10,10),bulbMat); bulb.position.set(nodeX(i)+3.5,4.8,nodeZ(j)+2); world.add(bulb); }
+
   const hpSpots=[[1,1],[5,2],[2,5],[6,4]], ammoSpots=[[3,6],[6,1],[0,2],[4,5]];
   for(const [i,j] of hpSpots){ const x=nodeX(i),z=nodeZ(j); const g=pickupMesh('hp'); g.position.set(x,1.0,z); world.add(g); S.pickups.push({x,z,active:true,t:0,type:'hp',mesh:g}); }
   for(const [i,j] of ammoSpots){ const x=nodeX(i),z=nodeZ(j); const g=pickupMesh('ammo'); g.position.set(x,1.0,z); world.add(g); S.pickups.push({x,z,active:true,t:0,type:'ammo',mesh:g}); }
