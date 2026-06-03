@@ -16,6 +16,7 @@ export function updateHud(){ const p=S.player;
   el('thiefHp').firstElementChild.style.transform=`scaleX(${Math.max(0,p.hp/CFG.player.maxHp)})`;
   el('stam').firstElementChild.style.transform=`scaleX(${Math.max(0,p.stam/CFG.player.maxStam)})`;
   el('points').childNodes[0].nodeValue=Math.floor(S.points).toLocaleString();
+  { const rt=el('roundTag'); if(rt) rt.textContent='ROUND '+S.round; }
   const wEl=el('wanted'); if(wEl){ if(S.alarm){ wEl.style.opacity=1; wEl.textContent='WANTED '+'★'.repeat(S.heat)+'☆'.repeat(Math.max(0,CFG.alarm.maxHeat-S.heat)); } else wEl.style.opacity=0; }
   el('hidden').style.opacity=S.hidden?1:0;
   el('combo').style.opacity=S.combo>1?1:0; el('combo').textContent=S.combo>1?('COMBO ×'+S.combo):'';
