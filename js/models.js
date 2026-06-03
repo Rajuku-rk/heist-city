@@ -11,8 +11,8 @@ let gltf=null, CHAR_SCALE=1, MODEL_MINY=0;
 // --- Gun-in-hand tuning (tweak if the gun sits wrong in the hand) ---
 const GUN_POS = { x:0.05, y:0.0, z:0.06 }; // offset from the hand bone (metres)
 const GUN_ROT = { x:0, y:0, z:0 };          // extra rotation (radians) if it points wrong
-const GUN_SCALE = 3.0;                       // overall gun size multiplier
-const _gunBody = new THREE.MeshStandardMaterial({color:0xff5500,roughness:0.5,metalness:0.2});
+const GUN_SCALE = 1.4;                       // overall gun size multiplier
+const _gunBody = new THREE.MeshStandardMaterial({color:0x23262d,roughness:0.5,metalness:0.6});
 const _gunDark = new THREE.MeshStandardMaterial({color:0x111318,roughness:0.6,metalness:0.4});
 
 // Build a simple low-poly gun. type: 'pistol' | 'rifle' | 'shotgun'
