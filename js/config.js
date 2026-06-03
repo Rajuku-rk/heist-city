@@ -22,6 +22,11 @@ export const CFG = {
 
   heist:{ crackTime:5, lootPoints:600, names:['THE VAULT','THE JEWELRY STORE','THE ART GALLERY','THE CASINO CAGE','THE CENTRAL BANK'] },
   alarm:{ firstDelay:2.5, interval:6, perWave:2, maxActive:18, spawnDist:30, maxHeat:5, heatEvery:2 },
+  copTypes:{
+    heavy:  { tint:0xff7a1a, hp:280, gunDmg:11, gunRange:30, gunCdBase:1.5, fromRound:2 },
+    sniper: { tint:0xa770ff, hp:55,  gunDmg:26, gunRange:78, gunCdBase:2.4, fromRound:3 }
+  },
+  round:{ healOnClear:30 },
   copGun:{ dmg:6, fireCd:1.0, range:42, minRange:5, hitChance:0.5 },        // cops' pistols
   pickup:{ heal:35, respawn:18 }, ammoPickup:{ amount:30, respawn:16 }, hideRegen:16,
   gravity:26, pointsPerSec:8, pointsWin:2500
