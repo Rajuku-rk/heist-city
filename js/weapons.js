@@ -45,12 +45,13 @@ function playerFire(){ const p=S.player, g=S.gun; if(S.ammo<=0){ reload(); retur
 }
 
 export function copFire(c){ if(c.gunCd>0) return; const p=S.player; const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz)||1e-4;
-  if(d<CFG.copGun.minRange||d>CFG.copGun.range) return; if(segmentBlocked(c.x,c.z,p.x,p.z)) return;
-  c.gunCd=CFG.copGun.fireCd*(0.8+Math.random()*0.5); Audio.shot(); playAction(c,'shoot',0.18);
-  const hit = !S.hidden && Math.random()<CFG.copGun.hitChance;
+  const range=c.gunRange||CFG.copGun.range;
+  if(d<CFG.copGun.minRange||d>range) return; if(segmentBlocked(c.x,c.z,p.x,p.z)) return;
+  c.gunCd=(c.gunCdBase||CFG.copGun.fireCd)*(0.8+Math.random()*0.5); Audio.shot(); playAction(c,'shoot',0.18);
+  const hit = !S.hidden && Math.random()<(c.aim||CFG.copGun.hitChance);
   let ex=p.x,ez=p.z; if(!hit){ ex+=(Math.random()-0.5)*4; ez+=(Math.random()-0.5)*4; }
   spawnTracer(c.x+(dx/d)*0.7,1.4,c.z+(dz/d)*0.7,ex,1.3,ez,0xff8060);
-  if(hit && !S.driving){ p.hp-=CFG.copGun.dmg; flash(0.26,'#ff3b4e'); S.shake=Math.max(S.shake,.28);
+  if(hit && !S.driving){ p.hp-=(c.gunDmg||CFG.copGun.dmg); flash(0.26,'#ff3b4e'); S.shake=Math.max(S.shake,.28);
     if(p.hp<=0){ p.hp=0; import('./game.js').then(m=>m.endGame(false)); } }
 }
 
