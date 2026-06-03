@@ -86,3 +86,4 @@ button:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,178,46,.3
 #heistBar{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:300px;max-width:60vw;height:14px;border:1px solid rgba(255,207,58,.55);border-radius:8px;background:rgba(0,0,0,.45);overflow:hidden;opacity:0;transition:opacity .2s;}
 #heistBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ffcf3a,#ff8a3a);transform:scaleX(0);transform-origin:left;border-radius:8px;}
 #wanted{margin-top:6px;font-family:'Oxanium';font-weight:800;letter-spacing:3px;color:#ff5a4e;font-size:15px;text-shadow:0 0 10px rgba(255,90,78,.6);opacity:0;transition:opacity .3s;}
+#roundTag{margin-top:4px;font-family:'Oxanium';font-weight:800;letter-spacing:2px;color:#ffcf3a;font-size:14px;opacity:.9;}
