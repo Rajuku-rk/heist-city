@@ -7,7 +7,7 @@ import { recomputeGPS } from './nav.js';
 import { banner } from './ui.js';
 import { Audio } from './audio.js';
 import { placeHeist } from './heist.js';
-import { makeAnimatedChar } from './models.js';
+import { makeAnimatedChar, setGunModel } from './models.js';
 
 export function collide(ent,r){
   for(const b of S.buildings){ const nx=Math.max(b.cx-b.hw,Math.min(ent.x,b.cx+b.hw)), nz=Math.max(b.cz-b.hd,Math.min(ent.z,b.cz+b.hd));
@@ -121,7 +121,8 @@ export function spawnAll(){
   S.gun=CFG.guns[S.gunIndex]; S.ammo=S.gun.mag; S.reloading=false; S.reloadT=0; S.fireCd=0; S.firing=false; S.shootReq=false;
 
   const _pc=makeAnimatedChar(0x1b3a4a);
-  S.player={mesh:_pc.mesh,mixer:_pc.mixer,actions:_pc.actions,animCur:'',x:nodeX(Math.floor(CFG.GN/2)),z:nodeZ(Math.floor(CFG.GN/2)),y:0,vy:0,vx:0,vz:0,facing:0,hp:CFG.player.maxHp,stam:CFG.player.maxStam,grounded:true,runPhase:0,fAtk:0,fType:null};
+  S.player={mesh:_pc.mesh,mixer:_pc.mixer,actions:_pc.actions,animCur:'',hand:_pc.hand,gun:_pc.gun,x:nodeX(Math.floor(CFG.GN/2)),z:nodeZ(Math.floor(CFG.GN/2)),y:0,vy:0,vx:0,vz:0,facing:0,hp:CFG.player.maxHp,stam:CFG.player.maxStam,grounded:true,runPhase:0,fAtk:0,fType:null};
+  { const _g=CFG.guns[S.gunIndex]||CFG.guns[0]; if(S.player.hand&&_g) setGunModel(S.player,_g.name.toLowerCase()); }
   S.car=null;
 
   function cop(o){ const pc=makeAnimatedChar(o.accent,false); if(o.scale) pc.mesh.scale.setScalar(o.scale);
