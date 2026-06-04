@@ -87,3 +87,10 @@ button:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,178,46,.3
 #heistBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ffcf3a,#ff8a3a);transform:scaleX(0);transform-origin:left;border-radius:8px;}
 #wanted{margin-top:6px;font-family:'Oxanium';font-weight:800;letter-spacing:3px;color:#ff5a4e;font-size:15px;text-shadow:0 0 10px rgba(255,90,78,.6);opacity:0;transition:opacity .3s;}
 #roundTag{margin-top:4px;font-family:'Oxanium';font-weight:800;letter-spacing:2px;color:#ffcf3a;font-size:14px;opacity:.9;}
+
+#rotate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;
+  background:#06070d;color:#eaf0ff;text-align:center;font-family:'Oxanium',sans-serif;padding:24px;}
+#rotate .rot-ico{font-size:56px;display:block;margin-bottom:14px;animation:rotpulse 1.8s ease-in-out infinite;}
+#rotate small{opacity:.6;font-size:13px;}
+@keyframes rotpulse{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(75deg)}}
+@media (max-width:900px) and (orientation:portrait){ #rotate{display:flex;} }
