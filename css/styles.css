@@ -93,17 +93,52 @@ button:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,178,46,.3
 #rotate .rot-ico{font-size:56px;display:block;margin-bottom:14px;animation:rotpulse 1.8s ease-in-out infinite;}
 #rotate small{opacity:.6;font-size:13px;}
 @keyframes rotpulse{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(75deg)}}
-@media (max-width:900px) and (orientation:portrait){ #rotate{display:flex;} }
+/* Rotate prompt: only on touch devices in portrait — never on PC */
+@media (orientation:portrait){ .mobile #rotate{ display:flex; } }
 
-@media (orientation:landscape) and (max-height:600px){
-  /* Start/End menus fit on one screen — no scrolling */
-  #startScreen, #endScreen, .screen{ justify-content:center !important; overflow:hidden !important; padding:8px 14px !important; }
-  #startScreen *, #endScreen *{ font-size:11px !important; line-height:1.2 !important; margin-top:2px !important; margin-bottom:2px !important; }
-  #startScreen h1, #startScreen h2, #endScreen h1, #endScreen h2{ font-size:20px !important; }
-  #startScreen .sub{ display:none !important; }
-  #startScreen button, #endScreen button{ font-size:13px !important; padding:8px 16px !important; }
+/* =========================================================
+   MOBILE HUD — every rule scoped to .mobile, so PC is untouched
+   ========================================================= */
 
-  /* Minimap shrunk to a small corner tile so the player can see behind it */
-  #mcv{ width:96px !important; height:96px !important; }
-  #hud > *:has(#mcv){ transform:scale(.8) !important; transform-origin:top right !important; }
-}
+/* compact corner minimap (it's #map, was 180px and covered the buttons) */
+.mobile #map{ width:92px; height:92px; right:8px; top:8px; border-width:1px; border-radius:6px; }
+.mobile #mapcap{ display:none; }
+
+/* center banner shrunk so it stops blanketing the screen */
+.mobile #banner{ font-size:24px; max-width:82vw; }
+
+/* fight UI: drop the keyboard hints, tighten the rest */
+.mobile #fightUI{ top:46px; width:auto; max-width:64vw; }
+.mobile #fightHint{ display:none; }
+.mobile #copName{ font-size:11px; margin-bottom:3px; }
+.mobile #copHp{ height:11px; }
+
+/* smaller HUD readouts */
+.mobile #points{ font-size:18px; }
+.mobile #points small{ font-size:8px; margin-top:1px; }
+.mobile #wanted, .mobile #roundTag, .mobile #combo{ font-size:11px; margin-top:2px; }
+.mobile .bar-wrap{ width:148px; top:8px; }
+.mobile .bar-wrap.left{ left:10px; }
+.mobile .bar-label{ font-size:9px; margin-bottom:3px; }
+.mobile .bar{ height:10px; }
+.mobile #objective{ font-size:10px; bottom:8px; max-width:78vw; }
+.mobile #heistBar{ bottom:80px; width:230px; height:11px; }
+
+/* touch buttons: tight bottom-corner cluster (default layout was for tall portrait) */
+.mobile .tbtn{ width:60px; height:60px; font-size:10px; }
+.mobile #btnHit{ right:16px; bottom:16px; }
+.mobile #btnJump{ right:84px; bottom:16px; }
+.mobile #btnHide{ right:16px; bottom:84px; }
+.mobile #btnAct{ right:84px; bottom:84px; }
+.mobile #btnGun{ left:16px; right:auto; bottom:150px; }
+
+/* menus fit the short landscape screen — no scroll, no keyboard list */
+.mobile .screen{ padding:10px 18px; overflow:hidden; }
+.mobile .controls, .mobile .sub{ display:none; }
+.mobile .kicker{ font-size:10px; letter-spacing:4px; margin-bottom:6px; }
+.mobile h1{ font-size:34px; margin-bottom:8px; }
+.mobile .btnrow{ gap:10px; }
+.mobile button{ font-size:13px; padding:11px 22px; }
+.mobile .endbig{ font-size:34px; }
+.mobile .stat{ font-size:12px; }
+.mobile #shopList{ margin-bottom:12px; gap:8px; }
