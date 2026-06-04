@@ -96,10 +96,14 @@ button:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,178,46,.3
 @media (max-width:900px) and (orientation:portrait){ #rotate{display:flex;} }
 
 @media (orientation:landscape) and (max-height:600px){
-  #startScreen, #endScreen, .screen{
-    justify-content:flex-start !important;
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch;
-    padding:12px 16px !important;
-  }
+  /* Start/End menus fit on one screen — no scrolling */
+  #startScreen, #endScreen, .screen{ justify-content:center !important; overflow:hidden !important; padding:8px 14px !important; }
+  #startScreen *, #endScreen *{ font-size:11px !important; line-height:1.2 !important; margin-top:2px !important; margin-bottom:2px !important; }
+  #startScreen h1, #startScreen h2, #endScreen h1, #endScreen h2{ font-size:20px !important; }
+  #startScreen .sub{ display:none !important; }
+  #startScreen button, #endScreen button{ font-size:13px !important; padding:8px 16px !important; }
+
+  /* Minimap shrunk to a small corner tile so the player can see behind it */
+  #mcv{ width:96px !important; height:96px !important; }
+  #hud > *:has(#mcv){ transform:scale(.8) !important; transform-origin:top right !important; }
 }
