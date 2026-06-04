@@ -16,7 +16,15 @@ import { relabelButtons } from './input.js';
 import { applyUpgrades, addCredits } from './upgrades.js';
 import { updateHeist, placeHeist } from './heist.js';
 
-export function startGame(bot){ applyUpgrades(); applyScene(CFG.scenes[S.sceneIndex]); buildCity(); spawnAll(); initWeapons(); S.points=0; S.elapsed=0; S.round=1; S.roundChanging=false; S.mode='play'; S.bot=!!bot;
+function goFullscreen(){
+  if(!document.body.classList.contains('mobile')) return;
+  const el=document.documentElement, fn=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!fn || document.fullscreenElement) return;
+  try{ const p=fn.call(el);
+    if(p&&p.then) p.then(()=>{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }).catch(()=>{});
+  }catch(e){}
+}
+export function startGame(bot){ goFullscreen(); applyUpgrades(); applyScene(CFG.scenes[S.sceneIndex]); buildCity(); spawnAll(); initWeapons(); S.points=0; S.elapsed=0; S.round=1; S.roundChanging=false; S.mode='play'; S.bot=!!bot;
   camera.position.set(nodeX(Math.floor(CFG.GN/2)),8,nodeZ(Math.floor(CFG.GN/2))-11);
   el('startScreen').classList.add('hidden'); el('endScreen').classList.add('hidden'); el('fightUI').classList.add('hidden');
   el('hud').classList.remove('hidden'); el('botTag').style.opacity=bot?1:0; relabelButtons(); Audio.play('run'); }
