@@ -7,7 +7,7 @@ export const S = {
   ammo:30, reloading:false, reloadT:0, fireCd:0, firing:false, shootReq:false, gunIndex:1, gun:null, tracers:[], muzzleT:0,
   credits:0, upgrades:{dmg:0,ammo:0,hp:0}, sceneIndex:0,
   heist:{looted:false,cracking:false,progress:0,zone:null,name:''},
-  alarm:false, heat:0, waveTimer:0, waveCount:0, round:1, roundChanging:false,
+  alarm:false, heat:0, waveTimer:0, waveCount:0, round:1, roundChanging:false, aimMode:false, stock:{rifle:120,shotgun:48},
   player:null, police:[], car:null, driving:false, hidden:false, bossDefeated:false,
   buildings:[], parks:[], hideouts:[], pickups:[], safe:null, diamond:null,
   route:[], lastStartKey:-1, fight:{active:false, target:null, cd:0}
