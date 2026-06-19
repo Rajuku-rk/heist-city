@@ -11,7 +11,7 @@ export function enterFight(){ if(S.fight.active) return; S.fight.active=true; S.
   el('fightUI').classList.remove('hidden'); relabelButtons(); Audio.play('fight'); banner('⚔ THEY GOT YOU','#ff3b4e'); }
 export function endFight(){ S.fight.active=false; S.fight.target=null; el('fightUI').classList.add('hidden'); relabelButtons(); Audio.play('run'); S.fight.cd=CFG.fight.cooldown; banner('BREAK FREE — RUN!','#28e0c8'); }
 function addCombo(){ S.combo++; S.comboT=1.6; S.points+=10*S.combo; }
-export function downCop(c){ c.hp=0; c.state='down'; c.downT=(c.role==='boss')?1e9:6; c.mesh.rotation.z=0; c.mesh.scale.setScalar(c.role==='boss'?CFG.boss.scale:1); playDeath(c);
+export function downCop(c){ c.hp=0; c.state='down'; S.points+=(c.role==='boss')?1500:200; c.downT=(c.role==='boss')?1e9:6; c.mesh.rotation.z=0; c.mesh.scale.setScalar(c.role==='boss'?CFG.boss.scale:1); playDeath(c);
   const pts=(c.role==='boss')?1500:300; S.points+=pts; popup((c.role==='boss'?'CAPTAIN DOWN +':'KO! +')+pts,'#ffd24a');
   if(c.role==='boss'){ S.bossDefeated=true; banner('★ CAPTAIN DOWN — GRAB THE DIAMOND','#28e0c8'); } }
 
