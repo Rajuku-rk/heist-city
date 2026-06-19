@@ -65,7 +65,7 @@ export function makeAnimatedChar(tint,shadow){
   const wrapper=new THREE.Group(); wrapper.add(inner); scene.add(wrapper);
   const mixer=new THREE.AnimationMixer(inner);
   const actions={};
-  const CLIPS={ idle:'Idle_Loop', walk:'Walk_Loop', run:'Sprint_Loop', punch:'Punch_Jab', cross:'Punch_Cross', shoot:'Pistol_Shoot', death:'Death01' };
+  const CLIPS={ idle:'Idle_Loop', walk:'Walk_Loop', run:'Sprint_Loop', punch:'Punch_Jab', cross:'Punch_Cross', shoot:'Pistol_Shoot', death:'Death01', hit:'Hit_Chest', reload:'Pistol_Reload' };
   for(const key in CLIPS){ const clip=THREE.AnimationClip.findByName(gltf.animations,CLIPS[key]); if(clip) actions[key]=mixer.clipAction(clip); }
   { const pick=n=>THREE.AnimationClip.findByName(gltf.animations,n);
     const aimClip=pick('Pistol_Aim_Neutral')||pick('Pistol_Idle_Loop');
