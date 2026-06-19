@@ -67,6 +67,9 @@ export function makeAnimatedChar(tint,shadow){
   const actions={};
   const CLIPS={ idle:'Idle_Loop', walk:'Walk_Loop', run:'Sprint_Loop', punch:'Punch_Jab', cross:'Punch_Cross', shoot:'Pistol_Shoot', death:'Death01' };
   for(const key in CLIPS){ const clip=THREE.AnimationClip.findByName(gltf.animations,CLIPS[key]); if(clip) actions[key]=mixer.clipAction(clip); }
+  { const pick=n=>THREE.AnimationClip.findByName(gltf.animations,n);
+    const aimClip=pick('Pistol_Aim_Neutral')||pick('Pistol_Idle_Loop');
+    if(aimClip) actions.aim=mixer.clipAction(aimClip); }
   const ent={ mesh:wrapper, mixer, actions, animCur:'', lock:0, dead:false, hand:null, gun:null };
   const hand=findHandBone(inner);
   if(hand){ ent.hand=hand;
@@ -107,6 +110,7 @@ export function driveLocomotion(ent,dt){
   ent.mixer.update(dt);
   if(ent.dead) return;
   if(ent.lock>0){ ent.lock-=dt; if(ent.lock>0) return; }
+  if(ent.aiming && ent.actions.aim){ playAnim(ent,'aim'); return; }
   const sp=Math.hypot(ent.vx||0,ent.vz||0);
   playAnim(ent, sp>RUN_SPEED ? 'run' : (sp>WALK_SPEED ? 'walk' : 'idle'));
 }
