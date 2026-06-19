@@ -139,6 +139,24 @@ export function spawnAll(){
   S.driving=false; S.camYaw=0; S.lastStartKey=-1; recomputeGPS(true);
 }
 
+// --- floating HP bars over cops ---
+const _hpTex=(()=>{ const cv=document.createElement('canvas'); cv.width=cv.height=2;
+  const x=cv.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,2,2); return new THREE.CanvasTexture(cv); })();
+function attachHpBar(c){
+  const mk=color=>{ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:_hpTex,color})); s.center.set(0,0.5); return s; };
+  const w=(c.role==='boss')?1.7:1.1;
+  c.hpBg=mk(0x14171d); c.hpBg.scale.set(w,0.12,1); c.hpBg.position.set(-w/2,2.45,0);
+  c.hpFg=mk(c.role==='boss'?0xffd24a:0xff4d5e); c.hpFg.scale.set(w,0.13,1); c.hpFg.position.set(-w/2,2.45,0.01);
+  c.hpW=w; c.mesh.add(c.hpBg); c.mesh.add(c.hpFg);
+}
+export function updateHpBars(){
+  for(const c of S.police){ if(!c.mesh) continue; if(!c.hpBg) attachHpBar(c);
+    const r=Math.max(0,Math.min(1,c.hp/(c.maxHp||100)));
+    c.hpFg.scale.x=Math.max(0.001,c.hpW*r);
+    const vis=c.state!=='down'; c.hpBg.visible=vis; c.hpFg.visible=vis; }
+}
+
+
 // ---- Alarm + escalating police waves (phase 2) ----
 export function addCop(o){ const pc=makeAnimatedChar(o.accent,false); if(o.scale) pc.mesh.scale.setScalar(o.scale);
   const c={mesh:pc.mesh,mixer:pc.mixer,actions:pc.actions,animCur:'',x:o.x,z:o.z,y:0,vx:0,vz:0,facing:0,hp:o.hp,maxHp:o.hp,state:o.state||'patrol',role:o.role,kind:o.kind||'cop',gunDmg:o.gunDmg,gunRange:o.gunRange,gunCdBase:o.gunCdBase,anchor:{x:o.x,z:o.z},path:[],repath:0,runPhase:0,windup:0,fTimer:1,downT:0,lostT:0,gunCd:0};
