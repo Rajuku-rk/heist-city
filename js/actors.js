@@ -12,20 +12,22 @@ import { driveLocomotion } from './models.js';
 export function checkWin(ent){ if(S.heist.looted && !S.roundChanging && S.safe && dist(ent,S.safe)<S.safe.r){ S.roundChanging=true; import('./game.js').then(m=>m.nextRound()); } }
 
 export function updatePlayer(dt){ const p=S.player,c=CFG.player; const {wx,wz,mag}=inputWorldDir(); const moving=mag>0.05;
-  const wantSprint=(S.bot?S.botSprint:(S.keys['ShiftLeft']||S.keys['ShiftRight']))&&moving&&p.stam>1; const speed=wantSprint?c.sprint:c.walk;
+  const wantSprint=(S.bot?S.botSprint:(S.keys['ShiftLeft']||S.keys['ShiftRight']))&&moving&&p.stam>1&&!p.aiming; const speed=(wantSprint?c.sprint:c.walk)*(p.aiming?0.45:1);
   if(wantSprint) p.stam=Math.max(0,p.stam-c.stamDrain*dt); else p.stam=Math.min(c.maxStam,p.stam+c.stamRegen*dt);
   const tvx=wx*speed,tvz=wz*speed; p.vx+=(tvx-p.vx)*Math.min(1,c.accel*dt); p.vz+=(tvz-p.vz)*Math.min(1,c.accel*dt); p.x+=p.vx*dt; p.z+=p.vz*dt;
   const jump=S.bot?S.botJump:(S.keys['Space']||S.touchJump); if(jump&&p.grounded){ p.vy=c.jump; p.grounded=false; }
   p.vy-=CFG.gravity*dt; p.y+=p.vy*dt; if(p.y<=0){p.y=0;p.vy=0;p.grounded=true;}
   collide(p,c.radius);
-if(moving){ const tf=Math.atan2(p.vx,p.vz); let d=tf-p.facing; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI; p.facing+=d*Math.min(1,7*dt); }
+if(moving){ const tf=Math.atan2(p.vx,p.vz); let d=tf-p.facing; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  if(p.aiming){ const mx=2.0*dt; p.facing+=Math.max(-mx,Math.min(mx,d)); } else p.facing+=d*Math.min(1,7*dt); }
   if(moving&&p.grounded){ p.runPhase+=dt*(wantSprint?14:9); if(Math.sin(p.runPhase)>0.96) Audio.foot(); }
   driveLocomotion(p,dt);
   p.mesh.position.set(p.x,p.y,p.z); p.mesh.rotation.y=p.facing;
   S.hidden=false; for(const h of S.hideouts){ if(dist(p,h)<h.r){ S.hidden=true; break; } }
   if(S.hidden) p.hp=Math.min(c.maxHp,p.hp+CFG.hideRegen*dt);
   for(const k of S.pickups){ if(k.active && dist(p,k)<1.6){
-    if(k.type==='ammo'){ S.ammo=Math.min(S.gun.mag,S.ammo+CFG.ammoPickup.amount); k.t=CFG.ammoPickup.respawn; banner('+AMMO','#ffd060'); }
+    if(k.type==='ammo'){ const kk=(S.gun.name==='SHOTGUN')?'shotgun':'rifle'; S.stock[kk]=(S.stock[kk]||0)+CFG.ammoPickup.amount;
+      S.ammo=Math.min(S.gun.mag,S.ammo+CFG.ammoPickup.amount); k.t=CFG.ammoPickup.respawn; banner('+AMMO','#ffd060'); }
     else { p.hp=Math.min(c.maxHp,p.hp+CFG.pickup.heal); k.t=CFG.pickup.respawn; banner('+'+CFG.pickup.heal+' HP','#5dd95d'); }
     k.active=false; k.mesh.visible=false; Audio.kit(); } }
   checkWin(p);
