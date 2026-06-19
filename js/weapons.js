@@ -46,7 +46,7 @@ export function setGun(i){ if(i<0||i>=CFG.guns.length) return; S.gunIndex=i; S.g
 export function reload(){ if(S.reloading||S.ammo>=S.gun.mag) return;
   const k=stockKey(S.gun);
   if(k && (S.stock[k]||0)<=0){ banner('OUT OF '+S.gun.name+' AMMO','#ff5a4e'); return; }
-  S.reloading=true; S.reloadT=S.gun.reload; Audio.reload(); }
+  S.reloading=true; S.reloadT=S.gun.reload; Audio.reload(); playAction(S.player,'reload',S.gun.reload); }
 
 function playerFire(){ const p=S.player, g=S.gun; if(S.ammo<=0){ reload(); return; } S.ammo--; S.fireCd=g.fireCd; Audio.shot(); playAction(p,'shoot',0.18);
   const fx=Math.sin(p.facing), fz=Math.cos(p.facing);
@@ -73,7 +73,7 @@ function playerFire(){ const p=S.player, g=S.gun; if(S.ammo<=0){ reload(); retur
     if(target.hp<=0){ target.hp=0; target.state='down'; target.downT=(target.role==='boss')?1e9:6; target.mesh.rotation.z=0;
       const pts=(target.role==='boss')?1500:200; S.points+=pts; hitMark(true); popup((target.role==='boss'?'CAPTAIN DOWN +':'KILL +')+pts,'#ffd24a'); Audio.hitmark();
       if(target.role==='boss'){ S.bossDefeated=true; banner('★ CAPTAIN DOWN — GRAB THE DIAMOND','#28e0c8'); } }
-    else { S.points+=18; hitMark(false); Audio.hitmark(); }
+    else { S.points+=18; if(Math.random()<0.4) playAction(target,'hit',0.18); hitMark(false); Audio.hitmark(); }
   }
   const n=Math.min(g.pellets||1,5);
   for(let i=0;i<n;i++){ const a=p.facing+((n>1)?(Math.random()-0.5)*g.cone:0); spawnTracer(gx,gy,gz, p.x+Math.sin(a)*(endD+0.7),1.4, p.z+Math.cos(a)*(endD+0.7),0xfff2a0); }
