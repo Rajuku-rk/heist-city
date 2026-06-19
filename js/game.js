@@ -50,7 +50,7 @@ export function loop(now){ requestAnimationFrame(loop); let dt=(now-last)/1000; 
   if(S.diamond){ S.diamond.mesh.rotation.y+=dt*1.6; S.diamond.mesh.position.y=2.2+Math.sin(S.t*2)*0.25; }
   for(const k of S.pickups){ if(!k.active){ k.t-=dt; if(k.t<=0){ k.active=true; k.mesh.visible=true; } } else k.mesh.rotation.y+=dt*2; }
   if(S.mode==='play'){
-    S.elapsed+=dt; if(S.alarm||S.fight.active) S.points+=CFG.pointsPerSec*dt; if(S.fight.cd>0) S.fight.cd-=dt; if(S.comboT>0){ S.comboT-=dt; if(S.comboT<=0) S.combo=0; }
+    S.elapsed+=dt; if(S.fight.active) S.points+=CFG.pointsPerSec*dt; if(S.fight.cd>0) S.fight.cd-=dt; if(S.comboT>0){ S.comboT-=dt; if(S.comboT<=0) S.combo=0; }
     if(S.bot) botThink(dt);
     if(S.fight.active) updateFight(dt); else if(S.driving) updateCar(dt); else updatePlayer(dt);
     updateHeist(dt); updateAlarm(dt);
