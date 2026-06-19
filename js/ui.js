@@ -23,7 +23,7 @@ export function updateHud(){ const p=S.player;
   const gunMode = !S.fight.active && !S.driving;
   el('crosshair').style.opacity = gunMode?1:0;
   el('ammo').style.opacity = gunMode?1:0;
-  el('ammo').innerHTML = S.gun.name+' · '+(S.reloading ? 'RELOADING…' : '<b>'+S.ammo+'</b>/'+S.gun.mag+' <span>R · 1/2/3 swap</span>');
+  el('ammo').innerHTML = S.gun.name+' · '+(S.reloading ? 'RELOADING…' : '<b>'+S.ammo+'</b>/'+S.gun.mag+(stKey()?(' · '+(S.stock[stKey()]||0)):'')+' <span>R · 1/2/3 swap</span>');
   const pr=el('prompt');
   if(S.fight.active) pr.style.opacity=0;
   else if(!S.driving && S.car && dist(S.player,S.car)<3.8){ pr.innerHTML='Press <b>E</b> to steal the car'; pr.style.opacity=1; }
@@ -52,3 +52,5 @@ export function drawMap(){ const W=mini.width,H=mini.height,pad=12, wmin=-HALF-C
   if(S.car){ mctx.fillStyle='#d23a2a'; mctx.fillRect(X(S.car.x)-4,Y(S.car.z)-4,8,8); }
   for(const pol of S.police){ if(pol.state==='down')continue; mctx.fillStyle=pol.role==='boss'?'#ffd24a':'#ff3b4e'; mctx.beginPath(); mctx.arc(X(pol.x),Y(pol.z),pol.role==='boss'?6:4.5,0,7); mctx.fill(); }
   const a=actor(); mctx.save(); mctx.translate(X(a.x),Y(a.z)); mctx.rotate(Math.PI-(a.facing||0)); mctx.fillStyle=S.hidden?'#5dd95d':'#fff'; mctx.beginPath(); mctx.moveTo(0,-9); mctx.lineTo(6,7); mctx.lineTo(0,3); mctx.lineTo(-6,7); mctx.closePath(); mctx.fill(); mctx.restore(); }
+
+function stKey(){ return S.gun && (S.gun.name==='RIFLE'?'rifle':(S.gun.name==='SHOTGUN'?'shotgun':null)); }
