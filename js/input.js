@@ -13,9 +13,9 @@ export function toggleCar(){ if(S.mode!=='play'||S.fight.active) return; S.firin
 
 export function toggleBot(){ if(S.mode!=='play') return; S.bot=!S.bot; document.getElementById('botTag').style.opacity=S.bot?1:0; }
 
-export function relabelButtons(){ const bAct=document.getElementById('btnAct'),bJump=document.getElementById('btnJump'),bHit=document.getElementById('btnHit'),bHide=document.getElementById('btnHide'),bGun=document.getElementById('btnGun');
-  if(S.fight.active){ bHit.textContent='PUNCH'; bJump.textContent='KICK'; bAct.innerHTML='BLOCK<br>(hold)'; bHide.style.display='none'; if(bGun) bGun.style.display='none'; }
-  else { bHit.innerHTML='FIRE<br>(hold)'; bJump.textContent='JUMP'; bAct.textContent='CAR'; bHide.style.display=''; if(bGun) bGun.style.display=''; } }
+export function relabelButtons(){ const bAct=document.getElementById('btnAct'),bJump=document.getElementById('btnJump'),bHit=document.getElementById('btnHit'),bHide=document.getElementById('btnHide'),bGun=document.getElementById('btnGun'),bAim=document.getElementById('btnAim');
+  if(S.fight.active){ bHit.textContent='PUNCH'; bJump.textContent='KICK'; bAct.innerHTML='BLOCK<br>(hold)'; bHide.style.display='none'; if(bGun) bGun.style.display='none'; if(bAim) bAim.style.display='none'; }
+  else { bHit.innerHTML='FIRE<br>(hold)'; bJump.textContent='JUMP'; bAct.textContent='SPRINT'; bHide.style.display=''; if(bGun) bGun.style.display=''; if(bAim) bAim.style.display=''; } }
 
 export function inputWorldDir(){ let ix=0,iz=0;
   if(S.bot){ ix=S.botMove.x; iz=S.botMove.y; }
@@ -39,7 +39,10 @@ export function setupInput(){
   addEventListener('keyup',e=>{ S.keys[e.code]=false; if(e.code==='KeyF') S.firing=false; });
 
   import('./engine.js').then(({renderer})=>{ const el=renderer.domElement;
-    el.addEventListener('pointerdown',()=>{ if(S.mode!=='play'||S.bot) return; if(S.fight.active) fightPunch(); else if(!S.driving){ S.shootReq=true; S.firing=true; } });
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+    el.addEventListener('pointerdown',e=>{ if(S.mode!=='play'||S.bot) return;
+      if(e.button===2){ S.aimMode=!S.aimMode; return; }
+      if(S.fight.active) fightPunch(); else if(!S.driving){ S.shootReq=true; S.firing=true; } });
     el.addEventListener('pointerup',()=>{ S.firing=false; }); });
   addEventListener('pointerup',()=>{ S.firing=false; });
 
@@ -55,9 +58,11 @@ export function setupInput(){
   bHit.addEventListener('touchend',e=>{ S.firing=false; e.preventDefault(); });
   bJump.addEventListener('touchstart',e=>{ if(S.fight.active) fightKick(); else S.touchJump=true; e.preventDefault(); });
   bJump.addEventListener('touchend',e=>{ S.touchJump=false; e.preventDefault(); });
-  bAct.addEventListener('touchstart',e=>{ if(S.fight.active) S.touchBlock=true; else toggleCar(); e.preventDefault(); });
-  bAct.addEventListener('touchend',e=>{ S.touchBlock=false; e.preventDefault(); });
+  bAct.addEventListener('touchstart',e=>{ if(S.fight.active) S.touchBlock=true; else S.keys['ShiftLeft']=true; e.preventDefault(); });
+  bAct.addEventListener('touchend',e=>{ S.touchBlock=false; S.keys['ShiftLeft']=false; e.preventDefault(); });
   if(bGun) bGun.addEventListener('touchstart',e=>{ setGun((S.gunIndex+1)%CFG.guns.length); e.preventDefault(); });
+  const bAim=document.getElementById('btnAim');
+  if(bAim) bAim.addEventListener('touchstart',e=>{ S.aimMode=!S.aimMode; bAim.classList.toggle('active',S.aimMode); e.preventDefault(); });
 
   const sb=document.getElementById('sceneBtn');
   if(sb){ const upd=()=>{ sb.textContent='TIME: '+CFG.scenes[S.sceneIndex].name; };
