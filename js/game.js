@@ -2,11 +2,11 @@
 import { CFG, nodeX, nodeZ, dist } from './config.js';
 import { S, actor } from './state.js';
 import { renderer, scene, camera, applyScene } from './engine.js';
-import { buildCity, spawnAll, updateAlarm, spawnRoundGuards } from './world.js';
+import { buildCity, spawnAll, updateAlarm, spawnRoundGuards, updateHpBars } from './world.js';
 import { updatePlayer, updateCar } from './actors.js';
 import { updatePolice } from './police.js';
 import { updateFight, enterFight } from './fight.js';
-import { initWeapons, updateWeapons } from './weapons.js';
+import { initWeapons, updateWeapons, updateAim } from './weapons.js';
 import { botThink } from './bot.js';
 import { updateCamera } from './camera.js';
 import { drawMap, updateHud, updateBanner, banner, el } from './ui.js';
@@ -50,14 +50,14 @@ export function loop(now){ requestAnimationFrame(loop); let dt=(now-last)/1000; 
   if(S.diamond){ S.diamond.mesh.rotation.y+=dt*1.6; S.diamond.mesh.position.y=2.2+Math.sin(S.t*2)*0.25; }
   for(const k of S.pickups){ if(!k.active){ k.t-=dt; if(k.t<=0){ k.active=true; k.mesh.visible=true; } } else k.mesh.rotation.y+=dt*2; }
   if(S.mode==='play'){
-    S.elapsed+=dt; S.points+=CFG.pointsPerSec*dt; if(S.fight.cd>0) S.fight.cd-=dt; if(S.comboT>0){ S.comboT-=dt; if(S.comboT<=0) S.combo=0; }
+    S.elapsed+=dt; if(S.alarm||S.fight.active) S.points+=CFG.pointsPerSec*dt; if(S.fight.cd>0) S.fight.cd-=dt; if(S.comboT>0){ S.comboT-=dt; if(S.comboT<=0) S.combo=0; }
     if(S.bot) botThink(dt);
     if(S.fight.active) updateFight(dt); else if(S.driving) updateCar(dt); else updatePlayer(dt);
     updateHeist(dt); updateAlarm(dt);
     if(!S.bossDefeated){ const boss=S.police.find(c=>c.role==='boss');
       if(boss && !boss.warned && Math.hypot(S.player.x-boss.x,S.player.z-boss.z)<55){
         boss.warned=true; banner('★ THE CAPTAIN GUARDS THE ESCAPE — gun him down or take him down','#ffd24a'); } }
-    updateWeapons(dt);
+    updateWeapons(dt); updateAim(); updateHpBars();
     updatePolice(dt); if(!S.fight.active) recomputeGPS(false);
     let nd=1e9; const a=actor(); for(const pol of S.police){ if(pol.state==='down')continue; nd=Math.min(nd,dist(a,pol)); }
     Audio.intensity(S.fight.active?1:Math.max(0,Math.min(1,1-(nd-4)/26)));
